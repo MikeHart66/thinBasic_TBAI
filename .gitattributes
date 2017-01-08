@@ -1,4 +1,4 @@
-*.tbasic eol=crlf
-*.tbasicc eol=crlf
-*.tbasicu eol=crlf
-*.tbasici eol=crlf
+*.tbasic linguist-language=thinBasic
+*.tbasicc linguist-language=thinBasic
+*.tbasicu linguist-language=thinBasic
+*.tbasici linguist-language=thinBasic
