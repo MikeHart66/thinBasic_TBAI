@@ -1,0 +1,175 @@
+'*******************************************
+'*  
+'*   TBAI sample script - Find closest WP
+'*
+'*   by Michael Hartlef
+'*
+'*******************************************
+
+Uses "TBGL", "TBAI"
+
+Global sprTerrain, sprMarker, sprFlagR, sprFlagG, sprFlagY  As Long
+Global dirTextures As String = "Textures\"   
+Global hWnd As DWord
+Global framerate, mx,my, cdist, ci As Single
+
+Global pathID = 0  
+Global markerID = 0 
+
+Function TBMAIN()
+  Local width, height As Long
+  
+  ' -- Create and show window
+  hWnd = TBGL_CREATEWINDOWEX("TBAI sample 1 script - press Q to quit, move the mouse to see which WP is the closest", 800, 600, 32, %TBGL_WS_WINDOWED Or %TBGL_WS_CLOSEBOX Or %TBGL_WS_DONTSIZE)
+  TBGL_GETWINDOWCLIENT( hWnd, width, height )
+  TBGL_SHOWWINDOW 
+
+  'Load sprites
+  Init_Sprites()
+    
+  ' -- Set some render states
+  TBGL_USELIGHTING %FALSE
+  TBGL_USEBLEND %FALSE
+
+  TBGL_USEDEPTH %FALSE
+  TBGL_USETEXTURE %TRUE
+  TBGL_USEVSYNC %TRUE
+             
+             
+  ' -- Set the render matrix to the window clients resolution
+  TBGL_RENDERMATRIX2D (0,height,width,0)
+              
+  TBGL_USEALPHATEST %TRUE
+  TBGL_ALPHAFUNC %TBGL_GREATER, 0.5
+
+
+  ' -- Resets status of all keys 
+  TBGL_RESETKEYSTATE()
+
+  ' -- Set the TBGL color to pure white, so colors of sprites are the same like in the texture
+  TBGL_COLOR 255,255,255
+  TBGL_BACKCOLOR 100, 100 ,150
+      
+  ' -- Now set the sprites position in the middle of the screen
+  TBGL_SPRITESETPOS(sprTerrain,width/2,height/2)
+
+  
+  createFirstPath()
+  
+
+  ' -- Main loop              
+  While TBGL_ISWINDOW(hWnd) 
+    FrameRate = TBGL_GETFRAMERATE
+
+    ' -- Clear the background
+    TBGL_CLEARFRAME
+    ' -- With one command you draw all active sprites
+    TBGL_SPRITESDRAWALL  
+    
+    drawPath()
+    doLogic()
+    doStats()
+
+    ' -- Flip the buffer so you see something on the screen
+    TBGL_DRAWFRAME                                         
+    
+    ' -- ESCAPE 'Q' to exit the script
+    If TBGL_GETWINDOWKEYSTATE(hWnd, %VK_Q) Then Exit While 
+  Wend 
+
+  TBGL_DESTROYWINDOW
+End Function      
+
+'*******************************************
+Sub Init_Sprites()
+'*******************************************
+  ' -- Load the Terrain sprite 
+  sprTerrain = TBGL_SPRITELOAD (APP_SourcePath + dirTextures + "terrain.bmp") 
+  
+  'As the texture has a size of 1024x1024, we need to reset the size and 
+  'texture coords of our terrain sprite
+  TBGL_SPRITESETBASESIZE(sprTerrain,762,572)
+  TBGL_SPRITESETTEXCOORD(sprTerrain,1,0,0,761,570) 
+  TBGL_LOADTEXTURE APP_SourcePath + dirTextures + "marker.bmp",1,%TBGL_TEX_NEAREST, 0,RGB(255,255,0)        
+  
+  sprMarker = TBGL_SPRITECREATE(1) 
+  TBGL_SPRITESETBASESIZE(sprMarker,32,32)
+  TBGL_SPRITESETTEXCOORD(sprMarker,1,0,64,63,127)
+  TBGL_SPRITESETACTIVE(sprMarker,%FALSE) 
+  
+  sprFlagR = TBGL_SPRITECOPY(sprMarker)
+  TBGL_SPRITESETTEXCOORD(sprFlagR,1, 0, 0,63,63)  
+  TBGL_SPRITESETACTIVE(sprFlagR,%FALSE)
+  
+  sprFlagG = TBGL_SPRITECOPY(sprFlagR)
+  TBGL_SPRITESETTEXCOORD(sprFlagG,1,64,64,127,127)   
+  
+  sprFlagY = TBGL_SPRITECOPY(sprMarker)
+  TBGL_SPRITESETTEXCOORD(sprFlagY,1,64,0,127,63)   
+  
+  TBGL_LOADBMPFONT2D APP_SourcePath + dirTextures + "TBGL_Font.bmp",32, 43
+  
+  
+End Sub
+    
+
+'*******************************************
+Sub DrawPath()
+'*******************************************
+  Local wpCount As Long
+  Local i As Long
+  Local xpos,ypos As Single    
+  'newstate = 0
+  If pathID <> 0 Then  
+    wpcount = TBAI_PATHCOUNTWP(pathID)
+    For i = 1 To wpcount     
+      TBAI_WPGETPOS(pathID,i,xpos,ypos) 
+      If i = 1 Then
+        TBGL_SPRITEDRAWAT(sprFlagG,xpos,ypos)    
+      Else        
+        If i = wpCount Then                             
+          TBGL_SPRITEDRAWAT(sprFlagR,xpos,ypos)
+        Else
+          TBGL_SPRITEDRAWAT(sprFlagY,xpos,ypos)
+        End If
+      End If
+    Next
+  End If
+End Sub
+
+'*******************************************
+Sub doStats()
+'*******************************************
+  'Draw Stats
+  TBGL_BEGINPRINTBMP 
+    TBGL_COLOR 255,255,255
+    TBGL_PUSHSTATEPROTECT %TBGL_ALPHA
+    TBGL_PRINTBMP "X:"+Str$(mx)&"   Y:"+Str$(my),1,1
+    TBGL_PRINTBMP "closest index:"+Str$(ci),1,2
+    TBGL_POPSTATEPROTECT  
+  TBGL_ENDPRINTBMP        
+End Sub
+
+'*******************************************
+Sub createFirstPath()
+'*******************************************
+  pathID = TBAI_PATHCREATE
+  TBAI_PATHADDWP(pathID,220,460,0)
+  TBAI_PATHADDWP(pathID,310,480,0)
+  TBAI_PATHADDWP(pathID,460,430,0)
+  TBAI_PATHADDWP(pathID,590,420,0)
+  TBAI_PATHADDWP(pathID,695,390,0)
+  TBAI_PATHADDWP(pathID,680,350,0)    
+End Sub
+  
+'*******************************************
+Sub doLogic()
+'*******************************************
+  Local xp,yp As Single
+  mx = TBGL_MOUSEGETPOSX
+  my = TBGL_MOUSEGETPOSY   
+  ci = tbai_wpfindclosest(pathid,mx,my)
+  TBAI_WPGETPOS(pathid,ci,xp,yp)  
+  TBGL_SPRITEDRAWAT(sprMarker,xp,yp)
+End Sub
+ 

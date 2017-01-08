@@ -1,0 +1,27 @@
+#include "C:\Programme\PBWin80\WinAPI\resource.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1, 0, 1, 0
+PRODUCTVERSION 1, 0, 1, 0
+FILEOS VOS_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName",      "Michael Hartlef\0"
+      VALUE "FileDescription",  "thinBasic User Defined Library\0"
+      VALUE "FileVersion",      "1.0.1.0\0"
+      VALUE "InternalName",     "UserDefinedLib\0"
+      VALUE "LegalTradeMarks",  "\0"
+      VALUE "OriginalFilename", "tBrain.dll\0"
+      VALUE "LegalCopyright",   "Copyright © Michael Hartlef, 2009\0"
+      VALUE "ProductName",      "thinBasic AI module\0"
+      VALUE "ProductVersion",   "1.0.1.0\0"
+      VALUE "Comments",         "Support site: http://www.thinbasic.com\0"
+    END
+  END
+END
+
+
