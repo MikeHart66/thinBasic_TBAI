@@ -1,0 +1,4 @@
+*.tbasic eol=crlf
+*.tbasicc eol=crlf
+*.tbasicu eol=crlf
+*.tbasici eol=crlf
